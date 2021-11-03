@@ -1,0 +1,3 @@
+/home/indy/MotionHighlighter/CMakeFiles/edit_cache.dir
+/home/indy/MotionHighlighter/CMakeFiles/rebuild_cache.dir
+/home/indy/MotionHighlighter/CMakeFiles/MotionHighlighter.dir
