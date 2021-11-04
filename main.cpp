@@ -1,11 +1,24 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <stdio.h>
+#include <filesystem>
+
+#include <bits/stdc++.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 using namespace cv;
 using namespace std;
 
 const Scalar WHITE = Scalar(255, 255, 255), BLACK = Scalar(0, 0, 0), BLUE = Scalar(255, 0, 0), GREEN = Scalar(0, 255, 0), RED = Scalar(0, 0, 255), YELLOW = Scalar(0, 255, 255);
+
+int minFramesToStartRecord = 30;
+int maxFramesWithoutDetection = 60;
+int maxFramesToRecord = 1800;
+int minFramesToSnapshot = 60;
+string currSavDirName;
+
+void createDir(char* dirName);
 
 int main(int argc, const char** argv)
 {
@@ -14,7 +27,7 @@ int main(int argc, const char** argv)
     float frameRate, videoTimeElapsed, currentFrameCount, totalFrameCount, frameHeight, frameWidth, fourCC;
 
     VideoCapture capture;
-    capture.open("input/demo-v.webm");
+    capture.open("input/demo-video-2.webm");
     if(!capture.isOpened())
     {
         return -1;
@@ -40,11 +53,16 @@ int main(int argc, const char** argv)
     int detectionCounter = 0;
     int noDetectionCounter = 0;
     int framesStored = 0;
+    int momentCounter = 0;
     
     vector<Mat> detectionFrames;
     while(capture.isOpened() && key != 27)
     {
         currentFrameCount = capture.get(CAP_PROP_POS_FRAMES) - 1;
+        
+        videoTimeElapsed = int(capture.get(CAP_PROP_POS_MSEC)/1000);
+        //cout << videoTimeElapsed << endl;
+
         if(currentFrameCount == totalFrameCount) break;
         //cout << currentFrameCount << endl;
         cvtColor(currentFrame, currentFrame_gray, COLOR_BGR2GRAY);
@@ -94,15 +112,30 @@ int main(int argc, const char** argv)
         {
             detectionCounter++;
             noDetectionCounter = 0;
+            detectionFrames.push_back(currentFrame);
+            
         }
         else
         {
             noDetectionCounter++;
-            detectionCounter = 0;
+            if(noDetectionCounter >= 2 && detectionCounter > 0)
+            {
+                detectionCounter = 0;
+                if(!isRecording)
+                {
+                    detectionFrames.clear();
+                }
+            }
+            
         }
-        if(detectionCounter >= 10 && isRecording != true)
+        if(detectionCounter >= minFramesToStartRecord && isRecording != true)
         {
             isRecording = true;
+            momentCounter++;
+            currSavDirName = "output/moment-" + to_string(momentCounter);
+            char *cstr = new char[currSavDirName.length() + 1];
+            strcpy(cstr, currSavDirName.c_str());
+            createDir(cstr);
             cout << "isRecording changed to true" << endl;
             cout << "Started recording" << endl;
         }
@@ -111,22 +144,26 @@ int main(int argc, const char** argv)
         {
             detectionFrames.push_back(currentFrame);
             framesStored++;
-            if(framesStored >= 9000 || noDetectionCounter >= 300 || currentFrameCount == totalFrameCount - 1)
+            if(framesStored == int(maxFramesWithoutDetection/2))
             {
-               if(framesStored >= 9000)
+                imwrite(currSavDirName + "/img-" + to_string(currentFrameCount) + ".jpg", currentFrame);
+            }
+            if(framesStored >= maxFramesToRecord || noDetectionCounter >= maxFramesWithoutDetection || currentFrameCount == totalFrameCount - 1)
+            {
+               if(framesStored >= maxFramesToRecord)
                 {
-                    cout << "Frames stored >= 9000: " << framesStored << endl;
+                    cout << "Max Frames Stored. " << framesStored << endl;
                 }
                 if(noDetectionCounter >= 300)
                 {
-                    cout << "noDetection counter >= 300 " << noDetectionCounter << endl;
+                    cout << "Motion Detection Lost." << endl;
                 }
                 if(currentFrameCount == totalFrameCount - 1)
                 {
                     cout << "Last frame reached." << endl;
                 }  
 
-                string filename = "output/out" + to_string(currentFrameCount) + ".avi";
+                string filename = currSavDirName + "/vid-" + to_string(currentFrameCount) + ".avi";
                 cout << filename << endl;
                 VideoWriter video(filename, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), frameRate, Size(frameWidth, frameHeight));
                 for(int i = 0; i < detectionFrames.size(); i++)
@@ -152,4 +189,16 @@ int main(int argc, const char** argv)
         key = waitKey(30);
     }
     return 0;
+}
+
+void createDir(char* dirName)
+{
+    if (mkdir(dirName, 0777) == -1)
+    {
+        cerr << "Error : " << strerror(errno) << endl;
+    }
+    else
+    {
+        cout << "Directory Created" << endl;
+    }
 }
