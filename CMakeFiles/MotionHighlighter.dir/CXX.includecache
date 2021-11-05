@@ -17,6 +17,12 @@ stdio.h
 -
 filesystem
 -
+fstream
+-
+chrono
+-
+ctime
+-
 bits/stdc++.h
 -
 sys/stat.h

@@ -3,6 +3,10 @@
 #include <sstream>
 #include <stdio.h>
 #include <filesystem>
+#include <fstream>
+
+#include <chrono>
+#include <ctime>
 
 #include <bits/stdc++.h>
 #include <sys/stat.h>
@@ -13,7 +17,7 @@ using namespace std;
 
 const char* params
     = "{ help h | | Print Usage}"
-      "{ video v | input/demo-video.webm | Path to a video }";
+      "{ video v | input/demo.webm | Path to a video }";
 
 const Scalar WHITE = Scalar(255, 255, 255), BLACK = Scalar(0, 0, 0), BLUE = Scalar(255, 0, 0), GREEN = Scalar(0, 255, 0), RED = Scalar(0, 0, 255), YELLOW = Scalar(0, 255, 255);
 
@@ -21,12 +25,26 @@ int minFramesToStartRecord = 30;
 int maxFramesWithoutDetection = 60;
 int maxFramesToRecord = 1800;
 int minFramesToSnapshot = 60;
-string currSavDirName;
+string currDirName, currSubDirName;
 
 void createDir(char* dirName);
+void exportInfoJSON();
+
+float frameRate, videoTimeElapsed, videoTimeSecs, currentFrameCount, totalFrameCount, frameHeight, frameWidth, fourCC;
+vector<int> motionStartTimesSecs, motionEndTimesSecs;
 
 int main(int argc, char* argv[])
 {
+    auto start = chrono::system_clock::now();
+    time_t s_time = chrono::system_clock::to_time_t(start);
+    string start_time = ctime(&s_time);
+    cout << "Started processing at " << s_time;
+    
+    currDirName = "output/" + start_time;
+    char *cstr = new char[currDirName.length() + 1];
+    strcpy(cstr, currDirName.c_str());
+    createDir(cstr);
+
     CommandLineParser parser(argc, argv, params);
     
     parser.about("This program analyses videos to detect motion and outputs video clips highlighting the motion detections.");
@@ -39,8 +57,6 @@ int main(int argc, char* argv[])
 
     Mat currentFrame, nextFrame, currentFrame_gray, nextFrame_gray, currentFrame_blur, nextFrame_blur, morph, diff, thresh;
 
-    float frameRate, videoTimeElapsed, currentFrameCount, totalFrameCount, frameHeight, frameWidth, fourCC;
-
     String videoPath = parser.get<String>("video");
     cout << videoPath << endl;
     VideoCapture capture(videoPath);
@@ -51,6 +67,7 @@ int main(int argc, char* argv[])
 
     frameRate = capture.get(CAP_PROP_FPS);
     totalFrameCount = capture.get(CAP_PROP_FRAME_COUNT);
+    videoTimeSecs = int(totalFrameCount/frameRate);
     frameHeight = capture.get(CAP_PROP_FRAME_HEIGHT);
     frameWidth = capture.get(CAP_PROP_FRAME_WIDTH); 
     fourCC = capture.get(CAP_PROP_FOURCC);
@@ -79,7 +96,12 @@ int main(int argc, char* argv[])
         videoTimeElapsed = int(capture.get(CAP_PROP_POS_MSEC)/1000);
         //cout << videoTimeElapsed << endl;
 
-        if(currentFrameCount == totalFrameCount) break;
+        if(currentFrameCount == totalFrameCount - 1)
+        {
+            exportInfoJSON();
+            break;
+        } 
+     
         //cout << currentFrameCount << endl;
         cvtColor(currentFrame, currentFrame_gray, COLOR_BGR2GRAY);
         cvtColor(nextFrame, nextFrame_gray, COLOR_BGR2GRAY);
@@ -147,10 +169,11 @@ int main(int argc, char* argv[])
         if(detectionCounter >= minFramesToStartRecord && isRecording != true)
         {
             isRecording = true;
+            motionStartTimesSecs.push_back(videoTimeElapsed);
             momentCounter++;
-            currSavDirName = "output/moment-" + to_string(momentCounter);
-            char *cstr = new char[currSavDirName.length() + 1];
-            strcpy(cstr, currSavDirName.c_str());
+            currSubDirName = currDirName + "/moment-" + to_string(momentCounter);
+            char *cstr = new char[currSubDirName.length() + 1];
+            strcpy(cstr, currSubDirName.c_str());
             createDir(cstr);
             cout << "isRecording changed to true" << endl;
             cout << "Started recording" << endl;
@@ -162,7 +185,7 @@ int main(int argc, char* argv[])
             framesStored++;
             if(framesStored == int(maxFramesWithoutDetection/2))
             {
-                imwrite(currSavDirName + "/img-" + to_string(currentFrameCount) + ".jpg", currentFrame);
+                imwrite(currSubDirName + "/img-" + to_string(currentFrameCount) + ".jpg", currentFrame);
             }
             if(framesStored >= maxFramesToRecord || noDetectionCounter >= maxFramesWithoutDetection || currentFrameCount == totalFrameCount - 1)
             {
@@ -179,15 +202,17 @@ int main(int argc, char* argv[])
                     cout << "Last frame reached." << endl;
                 }  
 
-                string filename = currSavDirName + "/vid-" + to_string(currentFrameCount) + ".avi";
-                cout << filename << endl;
-                VideoWriter video(filename, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), frameRate, Size(frameWidth, frameHeight));
+                string videoFilename = currSubDirName + "/vid-" + to_string(currentFrameCount) + ".avi";
+                string txtFileName = currSubDirName + "/vidInfo-" + to_string(currentFrameCount) + ".json";
+                cout << videoFilename << endl;
+                VideoWriter video(videoFilename, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), frameRate, Size(frameWidth, frameHeight));
                 for(int i = 0; i < detectionFrames.size(); i++)
                 {
                     video.write(detectionFrames.front());
                     detectionFrames.erase(detectionFrames.begin());
                 }
                 video.release();
+                motionEndTimesSecs.push_back(videoTimeElapsed);
                 framesStored = 0;
                 isRecording = false;
                 cout << "Video Stored, isRecording changed to false." << endl;
@@ -203,6 +228,11 @@ int main(int argc, char* argv[])
         capture.read(nextFrame);
 
         key = waitKey(30);
+        if(key == 27)
+        {
+            exportInfoJSON();
+            break;
+        }
     }
     return 0;
 }
@@ -217,4 +247,39 @@ void createDir(char* dirName)
     {
         cout << "Directory Created" << endl;
     }
+}
+
+void exportInfoJSON()
+{
+    string txtFileName =  currDirName + "/vidInfo.json";
+    ofstream myfile;
+    myfile.open(txtFileName);
+    myfile << "{\n\"Video Frame Rate\": \"" + to_string(frameRate) + "\",\n";
+    myfile << "\"Video Total Frame Count\": \"" + to_string(totalFrameCount) + "\",\n";
+    myfile << "\"Video Total Time in seconds\": \"" + to_string(totalFrameCount) + "\",\n";
+    myfile << "\"Video Frame Height\": \"" + to_string(frameHeight) + "\",\n";
+    myfile << "\"Video Frame Width\": \"" + to_string(frameWidth) + "\"";
+
+    if(motionStartTimesSecs.size() > 0)
+    {
+        myfile <<",\n";
+        myfile << "\"Motion Start Times In Seconds\": \"[" + to_string(motionStartTimesSecs[0]);
+        for(int i = 1; i < motionStartTimesSecs.size(); i++)
+        {
+            myfile << ", " + to_string(motionStartTimesSecs[i]);
+        }
+        myfile << "]\"";
+    }
+    if(motionEndTimesSecs.size() > 0)
+    {
+        myfile <<",\n";
+        myfile << "\"Motion End Times In Seconds\": \"[" + to_string(motionEndTimesSecs[0]);
+        for(int i = 1; i < motionEndTimesSecs.size(); i++)
+        {
+            myfile << ", " + to_string(motionEndTimesSecs[i]);
+        }
+        myfile << "]\"";
+    }
+    myfile << "\n}";
+    myfile.close();
 }
