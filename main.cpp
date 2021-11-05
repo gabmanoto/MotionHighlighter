@@ -1,5 +1,6 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
+#include <sstream>
 #include <stdio.h>
 #include <filesystem>
 
@@ -9,6 +10,10 @@
 
 using namespace cv;
 using namespace std;
+
+const char* params
+    = "{ help h | | Print Usage}"
+      "{ video v | input/demo-video.webm | Path to a video }";
 
 const Scalar WHITE = Scalar(255, 255, 255), BLACK = Scalar(0, 0, 0), BLUE = Scalar(255, 0, 0), GREEN = Scalar(0, 255, 0), RED = Scalar(0, 0, 255), YELLOW = Scalar(0, 255, 255);
 
@@ -20,17 +25,28 @@ string currSavDirName;
 
 void createDir(char* dirName);
 
-int main(int argc, const char** argv)
+int main(int argc, char* argv[])
 {
+    CommandLineParser parser(argc, argv, params);
+    
+    parser.about("This program analyses videos to detect motion and outputs video clips highlighting the motion detections.");
+
+    if (parser.has("help"))
+    {
+        parser.printMessage();
+        return 0;
+    }
+
     Mat currentFrame, nextFrame, currentFrame_gray, nextFrame_gray, currentFrame_blur, nextFrame_blur, morph, diff, thresh;
 
     float frameRate, videoTimeElapsed, currentFrameCount, totalFrameCount, frameHeight, frameWidth, fourCC;
 
-    VideoCapture capture;
-    capture.open("input/demo-video-2.webm");
+    String videoPath = parser.get<String>("video");
+    cout << videoPath << endl;
+    VideoCapture capture(videoPath);
     if(!capture.isOpened())
     {
-        return -1;
+        cerr << "Unable to open: " << parser.get<String>("video") << endl;
     }
 
     frameRate = capture.get(CAP_PROP_FPS);

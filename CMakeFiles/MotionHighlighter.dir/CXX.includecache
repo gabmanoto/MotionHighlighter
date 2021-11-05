@@ -11,6 +11,8 @@ opencv2/opencv.hpp
 -
 iostream
 -
+sstream
+-
 stdio.h
 -
 filesystem
