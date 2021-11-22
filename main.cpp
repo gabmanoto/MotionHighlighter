@@ -275,6 +275,8 @@ int main(int argc, char* argv[])
                 if(debugMode == 1)
                 {
                     cv::putText(debugFrame, "Captured!", Point(300, 300), FONT_HERSHEY_DUPLEX, 5, RED, 1);
+                    namedWindow("Captured Frame");
+                    moveWindow("Captured Frame", 800, 70);
                     imshow("Captured Frame", currentFrame);
                 }
             }
