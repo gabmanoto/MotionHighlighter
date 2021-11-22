@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_FLAGS =  
 
-CXX_DEFINES = 
+CXX_DEFINES = -DFACE_DETECTION_CONFIGURATION=\"/home/indy/MotionHighlighter/assets/deploy.prototxt\" -DFACE_DETECTION_WEIGHTS=\"/home/indy/MotionHighlighter/assets/res10_300x300_ssd_iter_140000_fp16.caffemodel\"
 
-CXX_INCLUDES = -isystem /usr/local/include/opencv4 
+CXX_INCLUDES = -I/home/indy/MotionHighlighter/include -isystem /usr/local/include/opencv4 
 

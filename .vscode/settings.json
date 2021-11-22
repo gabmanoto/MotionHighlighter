@@ -4,6 +4,10 @@
         "future": "cpp",
         "istream": "cpp",
         "functional": "cpp",
-        "tuple": "cpp"
+        "tuple": "cpp",
+        "ostream": "cpp",
+        "array": "cpp",
+        "string_view": "cpp",
+        "chrono": "cpp"
     }
 }

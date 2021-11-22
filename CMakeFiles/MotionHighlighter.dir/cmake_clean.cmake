@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/MotionHighlighter.dir/FaceDetector.cpp.o"
   "CMakeFiles/MotionHighlighter.dir/main.cpp.o"
   "MotionHighlighter"
   "MotionHighlighter.pdb"

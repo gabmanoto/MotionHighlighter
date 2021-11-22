@@ -123,6 +123,33 @@ MotionHighlighter/fast:
 	$(MAKE) -f CMakeFiles/MotionHighlighter.dir/build.make CMakeFiles/MotionHighlighter.dir/build
 .PHONY : MotionHighlighter/fast
 
+FaceDetector.o: FaceDetector.cpp.o
+
+.PHONY : FaceDetector.o
+
+# target to build an object file
+FaceDetector.cpp.o:
+	$(MAKE) -f CMakeFiles/MotionHighlighter.dir/build.make CMakeFiles/MotionHighlighter.dir/FaceDetector.cpp.o
+.PHONY : FaceDetector.cpp.o
+
+FaceDetector.i: FaceDetector.cpp.i
+
+.PHONY : FaceDetector.i
+
+# target to preprocess a source file
+FaceDetector.cpp.i:
+	$(MAKE) -f CMakeFiles/MotionHighlighter.dir/build.make CMakeFiles/MotionHighlighter.dir/FaceDetector.cpp.i
+.PHONY : FaceDetector.cpp.i
+
+FaceDetector.s: FaceDetector.cpp.s
+
+.PHONY : FaceDetector.s
+
+# target to generate assembly for a file
+FaceDetector.cpp.s:
+	$(MAKE) -f CMakeFiles/MotionHighlighter.dir/build.make CMakeFiles/MotionHighlighter.dir/FaceDetector.cpp.s
+.PHONY : FaceDetector.cpp.s
+
 main.o: main.cpp.o
 
 .PHONY : main.o
@@ -159,6 +186,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... MotionHighlighter"
+	@echo "... FaceDetector.o"
+	@echo "... FaceDetector.i"
+	@echo "... FaceDetector.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: motion-highlighter-deployment
+  labels:
+    app: motion-highlighter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: motion-highlighter
+  template:
+    metadata:
+      labels:
+        app: motion-highlighter
+    spec:
+      containers:
+      - name: motion-highlighter
+        image: indrajeetdatta/motionhighlighter:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: motion-highlighter-service
+spec:
+  ports:
+  - port: 80
+  selector:
+    app: motion-highlighter
+

@@ -145,7 +145,7 @@ CMAKE_PROJECT_DESCRIPTION:STATIC=
 CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=HumanDetection
+CMAKE_PROJECT_NAME:STATIC=MotionHighlighter
 
 //Path to a program.
 CMAKE_RANLIB:FILEPATH=/usr/bin/ranlib
@@ -210,10 +210,10 @@ CMAKE_STRIP:FILEPATH=/usr/bin/strip
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
 //Value Computed by CMake
-HumanDetection_BINARY_DIR:STATIC=/home/indy/MotionHighlighter
+MotionHighlighter_BINARY_DIR:STATIC=/home/indy/MotionHighlighter
 
 //Value Computed by CMake
-HumanDetection_SOURCE_DIR:STATIC=/home/indy/MotionHighlighter
+MotionHighlighter_SOURCE_DIR:STATIC=/home/indy/MotionHighlighter
 
 //The directory containing a CMake configuration file for OpenCV.
 OpenCV_DIR:PATH=/usr/local/lib/cmake/opencv4

@@ -29,6 +29,8 @@ sys/stat.h
 -
 sys/types.h
 -
+FaceDetector.h
+/home/indy/MotionHighlighter/FaceDetector.h
 
 /usr/local/include/opencv4/opencv2/calib3d.hpp
 opencv2/core.hpp
@@ -1047,4 +1049,8 @@ opencv2/imgproc.hpp
 /usr/local/include/opencv4/opencv2/videoio.hpp
 opencv2/core.hpp
 /usr/local/include/opencv4/opencv2/opencv2/core.hpp
+
+include/FaceDetector.h
+opencv4/opencv2/dnn.hpp
+-
 
