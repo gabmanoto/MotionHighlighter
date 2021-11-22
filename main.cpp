@@ -28,7 +28,7 @@ const char* params
       "{ method m | 0 | Detection methods: 0 for background subtraction or 1 for face detection using neural network.}";
 
 int minFramesToStartRecord = 30;
-int maxFrameTolerationWithoutDetection = 60;
+int maxFrameTolerationWithoutDetection = 120;
 int maxFramesVideo = 1800;
 int minFramesSnapshot = 60;
 int frameForSnapshot = 5;
@@ -38,11 +38,14 @@ string outputDir, currDirName, currSubDirName;
 void createDir(char* dirName);
 void exportInfoJSON();
 
-float frameRate, videoTimeElapsed, videoTimeSecs, currentFrameCount, totalFrameCount, frameHeight, frameWidth, fourCC;
+float frameRate, videoTimeElapsed, videoTimeSecs, frameHeight, frameWidth, fourCC;
+int currentFrameCount, totalFrameCount;
 vector<int> motionStartTimesSecs, motionEndTimesSecs;
 Mat currentFrame, nextFrame, currentFrame_gray, nextFrame_gray, currentFrame_blur, nextFrame_blur, morph, diff, thresh, debugFrame;
 int recordMode, debugMode, method;
+vector<vector<Point>> contours;
 time_t sys_startTime;
+std::chrono::duration<double> elapsed;
 
 int main(int argc, char* argv[])
 {
@@ -142,13 +145,16 @@ int main(int argc, char* argv[])
         cout << "-------------------------------------------------------------------------------" << endl; cout << endl;
     }
 
-    if(method==1){ FaceDetector face_detector; }
+    FaceDetector face_detector;
     
     capture.read(currentFrame);
     capture.read(nextFrame);
 
-    if(debugMode == 1){ debugFrame = currentFrame.clone(); }
-
+    if(currentFrame.empty() || nextFrame.empty())
+    {
+        cerr << "Could not read frame." << endl;
+        return -1;
+    }
     int key = 0;
     bool isRecording = false;
     int detectionCounter = 0;
@@ -164,12 +170,13 @@ int main(int argc, char* argv[])
 
         if(currentFrameCount == totalFrameCount - 1)
         {
-            exportInfoJSON();
             break;
         } 
         
         bool isDetection = false;
         
+        if(debugMode == 1){ debugFrame = currentFrame.clone(); }
+
         if(method == 1)
         {
             auto rectangles = face_detector.detect_face_rectangles(currentFrame);
@@ -187,7 +194,6 @@ int main(int argc, char* argv[])
         }
         else if(method == 0)
         {
-            
             cvtColor(currentFrame, currentFrame_gray, COLOR_BGR2GRAY);
             cvtColor(nextFrame, nextFrame_gray, COLOR_BGR2GRAY);
             
@@ -205,7 +211,6 @@ int main(int argc, char* argv[])
                 dilate(morph, morph, getStructuringElement(MORPH_RECT, Size(7, 7)));
             }
 
-            vector<vector<Point> > contours;
             findContours(morph, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
 
             Mat img_out = nextFrame.clone();
@@ -255,24 +260,23 @@ int main(int argc, char* argv[])
         {
             isRecording = true;
             motionStartTimesSecs.push_back(videoTimeElapsed);
-            momentCounter++;
-            currSubDirName = currDirName + "/" + to_string(momentCounter);
-            char *cstr = new char[currSubDirName.length() + 1];
-            strcpy(cstr, currSubDirName.c_str());
-            createDir(cstr);
-            if(debugMode == 1)
-            {
-                cout << "isRecording changed to true" << endl;
-                cout << "Motion recording started..." << endl;
-            }
-            
+            // momentCounter++;
+            // currSubDirName = currDirName + "/" + to_string(momentCounter);
+            // char *cstr = new char[currSubDirName.length() + 1];
+            // strcpy(cstr, currSubDirName.c_str());
+            // createDir(cstr);
         }
         if(isRecording == true)
         {
             framesRecorded++;
             if(framesRecorded == frameForSnapshot)
             {
-                imwrite(currSubDirName + "/img-" + to_string(currentFrameCount) + ".jpg", currentFrame);
+                imwrite(currDirName + "/img-" + to_string(currentFrameCount) + ".jpg", currentFrame);
+                if(debugMode == 1)
+                {
+                    cv::putText(debugFrame, "Captured!", Point(300, 300), FONT_HERSHEY_DUPLEX, 5, RED, 1);
+                    imshow("Captured Frame", currentFrame);
+                }
             }
             if(recordMode == 1)
             {
@@ -280,7 +284,6 @@ int main(int argc, char* argv[])
                 if(framesRecorded >= maxFramesVideo)
                 {
                     string videoFilename = currSubDirName + "/vid-" + to_string(currentFrameCount) + ".avi";
-                    cout << videoFilename << endl;
                     VideoWriter video(videoFilename, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), frameRate, Size(frameWidth, frameHeight));
                     for(int i = 0; i < detectionFrames.size(); i++)
                     {
@@ -294,7 +297,7 @@ int main(int argc, char* argv[])
             {
                 if(recordMode == 1)
                 {
-                    string videoFilename = currSubDirName + "/vid-" + to_string(currentFrameCount) + ".avi";
+                    string videoFilename = currDirName + "/vid-" + to_string(currentFrameCount) + ".avi";
                     VideoWriter video(videoFilename, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), frameRate, Size(frameWidth, frameHeight));
                     for(int i = 0; i < detectionFrames.size(); i++)
                     {
@@ -307,30 +310,66 @@ int main(int argc, char* argv[])
                 motionEndTimesSecs.push_back(videoTimeElapsed);
                 framesRecorded = 0;
                 isRecording = false;
-                if(debugMode == 1) {cout << "isRecording changed to false" << endl;}
             }
         }
         if(debugMode == 1)
         {
+            if(method == 0)
+            {
+                cv::putText(debugFrame, "Method: Background Subtraction", Point(debugFrame.cols/3, 20), FONT_HERSHEY_DUPLEX, 0.5, YELLOW, 1);
+            }
+            else
+            {
+                cv::putText(debugFrame, "Method: Face Detection", Point(debugFrame.cols/3, 20), FONT_HERSHEY_DUPLEX, 0.5, YELLOW, 1);
+            }
+            cv::putText(debugFrame, "Frame No.: " + to_string(currentFrameCount), Point(10, 20), FONT_HERSHEY_DUPLEX, 0.5, RED, 1);
+
+            cv::putText(debugFrame, "DC: " + to_string(detectionCounter), Point(10, 40), FONT_HERSHEY_DUPLEX, 0.5, RED, 1);
+            
+            cv::putText(debugFrame, "NDC: " + to_string(noDetectionCounter), Point(10, 60), FONT_HERSHEY_DUPLEX, 0.5, RED, 1);
+
+            if(isDetection)
+            {
+                cv::putText(debugFrame, "Detected", Point(10, 80), FONT_HERSHEY_DUPLEX, 0.5, GREEN, 1);
+            }
+            else
+            {
+                cv::putText(debugFrame, "Not Detected", Point(10, 80), FONT_HERSHEY_DUPLEX, 0.5, RED, 1);
+            }
+            if(isRecording)
+            {
+                cv::putText(debugFrame, "Motion Recording", Point(10, 100), FONT_HERSHEY_DUPLEX, 0.5, GREEN, 1);
+            }
+            else
+            {
+                cv::putText(debugFrame, "Not Recording", Point(10, 100), FONT_HERSHEY_DUPLEX, 0.5, RED, 1);
+            }
+        
+            if(method == 0)
+            {
+                drawContours(debugFrame, contours, -1, YELLOW, 1);
+            }
             imshow("Debug Frame", debugFrame);
         }
         currentFrame = nextFrame.clone();
         capture.read(nextFrame);
+        if(nextFrame.empty())
+        {
+            cerr << "Could not read frame." << endl;
+            break;
+        }
 
         key = waitKey(30);
         if(key == 27)
         {
-            exportInfoJSON();
             break;
         }
     }
     
     auto finish = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = finish - start;
-    if (debugMode == 1)
-    {
-        std::cout << "Elapsed time: " << elapsed.count() << " s\n";
-    }
+    elapsed = finish - start;
+    if (debugMode == 1){ std::cout << "Elapsed time: " << elapsed.count() << " s\n"; }
+    exportInfoJSON();
     return 0;
 }
 
@@ -355,7 +394,8 @@ void exportInfoJSON()
     myfile << "\"Video Total Frame Count\": \"" + to_string(totalFrameCount) + "\",\n";
     myfile << "\"Video Total Time in seconds\": \"" + to_string(totalFrameCount) + "\",\n";
     myfile << "\"Video Frame Height\": \"" + to_string(frameHeight) + "\",\n";
-    myfile << "\"Video Frame Width\": \"" + to_string(frameWidth) + "\"";
+    myfile << "\"Video Frame Width\": \"" + to_string(frameWidth) + "\",\n";
+    myfile << "\"Processing Elapsed Time\": \"" + to_string(elapsed.count()) + "\"";
 
     if(motionStartTimesSecs.size() > 0)
     {
