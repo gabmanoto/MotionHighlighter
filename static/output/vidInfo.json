@@ -1,9 +1,10 @@
 {
 "Video Frame Rate": "30.000000",
-"Video Total Frame Count": "766",
-"Video Total Time in seconds": "766",
+"Video Total Frame Count": "4501",
+"Video Total Time in seconds": "4501",
 "Video Frame Height": "480.000000",
 "Video Frame Width": "640.000000",
-"Processing Elapsed Time": "68.225341",
-"Motion Start Times In Seconds": "[4]"
+"Processing Elapsed Time": "193.172262",
+"Motion Start Times In Seconds": "[27, 71, 132]",
+"Motion End Times In Seconds": "[51, 106, 143]"
 }
