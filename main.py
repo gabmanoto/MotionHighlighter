@@ -52,6 +52,14 @@ def view_results():
  print(image_names)
  return render_template('output.html', image_names=image_names)
 
+@app.route("/download_image/<filename>")
+def download_image(filename):
+    try:
+        return send_from_directory(directory=app.config['OUTPUT_FOLDER'], path=filename, as_attachment=True)
+    except FileNotFoundError:
+        abort(404)
+
+
 # @app.route('/uploads/<filename>')
 # def uploaded_file(filename):
 #     return send_from_directory(app.config['OUTPUT_FOLDER'], filename, as_attachment=True)
