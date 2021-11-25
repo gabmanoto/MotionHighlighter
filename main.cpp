@@ -21,8 +21,8 @@ const Scalar WHITE = Scalar(255, 255, 255), BLACK = Scalar(0, 0, 0), BLUE = Scal
 
 const char* params
     = "{ help h | | Print Usage}"
-      "{ input i | input/demo.webm | input path to video }"
-      "{ output o | output/ | path to output folder }"
+      "{ input i | | input path to video }"
+      "{ output o | static/output/ | path to output folder }"
       "{ record r | 0 | Record motion video clip: 0 for only snapshot images or 1 for record short video clips of motion detection.}"
       "{ debug d | 0 | Debug modes: 0 for no debug mode or 1 for debug mode}"
       "{ method m | 0 | Detection methods: 0 for background subtraction or 1 for face detection using neural network.}";
@@ -112,11 +112,13 @@ int main(int argc, char* argv[])
         return -1;
     }
         
-    currDirName = outputPath + str_sysStartTime;
-    char *cstr = new char[currDirName.length() + 1];
-    strcpy(cstr, currDirName.c_str());
-    createDir(cstr);
+    // currDirName = outputPath + str_sysStartTime;
+    // char *cstr = new char[currDirName.length() + 1];
+    // strcpy(cstr, currDirName.c_str());
+    // createDir(cstr);
 
+    currDirName = outputPath;
+    
     VideoCapture capture(inputPath);
     
     if(!capture.isOpened())
@@ -271,7 +273,7 @@ int main(int argc, char* argv[])
             framesRecorded++;
             if(framesRecorded == frameForSnapshot)
             {
-                imwrite(currDirName + "/img-" + to_string(currentFrameCount) + ".jpg", currentFrame);
+                imwrite(currDirName + "images/img-" + to_string(currentFrameCount) + ".jpg", currentFrame);
                 if(debugMode == 1)
                 {
                     cv::putText(debugFrame, "Captured!", Point(300, 300), FONT_HERSHEY_DUPLEX, 5, RED, 1);

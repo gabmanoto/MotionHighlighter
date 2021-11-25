@@ -7,6 +7,9 @@ FROM opencvcourses/opencv-docker:latest
         apt-get install -y wget && \
         apt-get install -y unzip
 
+    COPY requirements.txt /usr/src/app/
+    RUN pip install --no-cache-dir -r /usr/src/app/requirements.txt
+
     ENV CC=/usr/bin/gcc \
         CXX=/usr/bin/g++
 
@@ -16,10 +19,14 @@ FROM opencvcourses/opencv-docker:latest
 
     CMD bash
 
-    COPY . /usr/src/app2
+    COPY . /usr/src/app
 
-    WORKDIR /usr/src/app2
+    WORKDIR /usr/src/app
 
     RUN cmake .
 
     RUN make
+
+    EXPOSE 5000
+
+    CMD ["python3", "/usr/src/app/main.py"]
