@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% block title %}
-	Motion Highlighter - Scale Infinite 
+ Scale Infinite - Motion Highlighter 
 {% endblock %}
 
 {% block content %}
-<h1> Motion Highlighter - Scale Infinite </h1>
+<h1 style="text-align:center;"> Motion Highlighter </h1>
 <h3> Select a file to upload </h3>
 <p>
 	{% with messages = get_flashed_messages() %}
@@ -17,14 +17,31 @@
 	  {% endif %}
 	{% endwith %}
 </p>
+
 <form method="post" action="/" enctype="multipart/form-data">
-    <dl>
-		<p>
-			<input type="file" name="file" autocomplete="off" required>
-		</p>
-    </dl>
-    <p>
-		<input type="submit" value="Submit">
+	<p>
+		<div class="custom-file">
+			<input class="custom-file-input" id="customFile" type="file" name="file" autocomplete="off" required>
+			<label class="custom-file-label" for="customFile">Choose file</label>
+		</div>
 	</p>
-</form>
+	<h3> Select a detection method </h3>
+	<p>
+		<div class="form-check">
+			<input class="form-check-input" type="radio" name="method" value="0" id="det1">
+			<label class="form-check-label" for="det1">
+			  Background Subtraction
+			</label>
+		  </div>
+		  <div class="form-check">
+			<input class="form-check-input" type="radio" name="method" value="1" id="det2" checked>
+			<label class="form-check-label" for="det2">
+			  Face Detection
+			</label>
+		  </div>
+	</p>
+	<p>
+		<button class="btn btn-primary" type="submit" value="Submit"> Process </button>
+	</p>
+  </form>
 {% endblock %}

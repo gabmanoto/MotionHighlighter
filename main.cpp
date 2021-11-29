@@ -111,11 +111,6 @@ int main(int argc, char* argv[])
         cerr << "Incorrect method specified" << endl;
         return -1;
     }
-        
-    // currDirName = outputPath + str_sysStartTime;
-    // char *cstr = new char[currDirName.length() + 1];
-    // strcpy(cstr, currDirName.c_str());
-    // createDir(cstr);
 
     currDirName = outputPath;
     
@@ -394,17 +389,17 @@ void exportInfoJSON()
     string txtFileName =  currDirName + "/vidInfo.json";
     ofstream myfile;
     myfile.open(txtFileName);
-    myfile << "{\n\"Video Frame Rate\": \"" + to_string(frameRate) + "\",\n";
-    myfile << "\"Video Total Frame Count\": \"" + to_string(totalFrameCount) + "\",\n";
-    myfile << "\"Video Total Time in seconds\": \"" + to_string(totalFrameCount) + "\",\n";
-    myfile << "\"Video Frame Height\": \"" + to_string(frameHeight) + "\",\n";
-    myfile << "\"Video Frame Width\": \"" + to_string(frameWidth) + "\",\n";
-    myfile << "\"Processing Elapsed Time\": \"" + to_string(elapsed.count()) + "\"";
+    myfile << "{\n\"videoFrameRate\": \"" + to_string(frameRate) + "\",\n";
+    myfile << "\"videoTotalFrameCount\": \"" + to_string(totalFrameCount) + "\",\n";
+    myfile << "\"videoTotalTimeInSeconds\": \"" + to_string(totalFrameCount) + "\",\n";
+    myfile << "\"videoFrameHeight\": \"" + to_string(frameHeight) + "\",\n";
+    myfile << "\"videoFrameWidth\": \"" + to_string(frameWidth) + "\",\n";
+    myfile << "\"processingElapsedTime\": \"" + to_string(elapsed.count()) + "\"";
 
     if(motionStartTimesSecs.size() > 0)
     {
         myfile <<",\n";
-        myfile << "\"Motion Start Times In Seconds\": \"[" + to_string(motionStartTimesSecs[0]);
+        myfile << "\"motionStartTimesInSeconds\": \"[" + to_string(motionStartTimesSecs[0]);
         for(int i = 1; i < motionStartTimesSecs.size(); i++)
         {
             myfile << ", " + to_string(motionStartTimesSecs[i]);
@@ -414,7 +409,7 @@ void exportInfoJSON()
     if(motionEndTimesSecs.size() > 0)
     {
         myfile <<",\n";
-        myfile << "\"Motion End Times In Seconds\": \"[" + to_string(motionEndTimesSecs[0]);
+        myfile << "\"motionEndTimesInSeconds\": \"[" + to_string(motionEndTimesSecs[0]);
         for(int i = 1; i < motionEndTimesSecs.size(); i++)
         {
             myfile << ", " + to_string(motionEndTimesSecs[i]);

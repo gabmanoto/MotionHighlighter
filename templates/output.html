@@ -4,10 +4,28 @@
 {% endblock %}
 
 {% block content %}
-    <h1> Motion Highlighter - Scale Infinite </h1>
-    <h2>Output Images: </h2>
+    <p style="text-align: center;">
+        <h2> Output Images </h2>
+        <a href={{url_for('download_all')}}> <button class="btn btn-primary">Download All</button></a>
+    </p>
+    
+
     {% for name in image_names %}
-    <img src={{url_for('static', filename='/output/images/'+name)}} width="500" height="500">
-    <a href={{url_for('download_image', filename=name)}}> <button>Download</button></a>
+        <img src={{url_for('static', filename='/output/images/'+name)}} class="img-thumbnail">
+        <a href={{url_for('download_image', filename=name)}}> <button class="btn btn-primary">Download</button></a>
     {% endfor %}
+    <p>
+        <div>
+            <h4> Video Information: </h4>
+            <div class="json_data">
+        </div>
+    </p>
+    
+
+    </div>
+    <script>
+        var data = JSON.parse({{json_data|tojson}});
+        document.querySelector(".json_data").innerHTML = 
+        data;
+    </script>
 {% endblock %}
