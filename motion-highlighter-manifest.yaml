@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: mh
-        image: acrscaleinfinite.azurecr.io/mh:latest
+        image: acrindrajeet.azurecr.io/mh:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 5000
